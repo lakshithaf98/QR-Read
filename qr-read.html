@@ -1,0 +1,195 @@
+<html>
+<head>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js" integrity="sha512-STof4xm1wgkfm7heWqFJVn58Hm3EtS31XFaagaa8VMReCXAkQnJZ+jEy8PCC/iT18dFy95WcExNHFTqLyp72eQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://rawgit.com/sitepoint-editors/jsqrcode/master/src/qr_packed.js"></script>
+<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+<style>
+html {
+  height: 100%;
+}
+
+body {
+  font-family: sans-serif;
+  padding: 0 10px;
+  height: 100%;
+  background: white;
+  margin: 0;
+}
+
+h1 {
+  color: white;
+  margin: 0;
+  padding: 15px;
+}
+
+#container {
+  text-align: center;
+  margin: 0;
+}
+
+#qr-canvas {
+  margin: auto;
+  width: calc(100% - 20px);
+  max-width: 400px;
+}
+
+#btn-scan-qr {
+  cursor: pointer;
+}
+
+#btn-scan-qr img {
+  height: 10em;
+  padding: 15px;
+  margin: 15px;
+  background: white;
+}
+
+#qr-result {
+  font-size: 1.2em;
+  margin: 20px auto;
+  padding: 20px;
+  max-width: 700px;
+  background-color: white;
+}
+</style>
+</head>
+<body>
+<div id="container">
+    <h1>QR Code Scanner</h1>
+
+    <a id="btn-scan-qr">
+        <img src="https://uploads.sitepoint.com/wp-content/uploads/2017/07/1499401426qr_icon.svg">
+    <a/>
+
+    <canvas hidden="" id="qr-canvas"></canvas>
+
+    <div id="qr-result" hidden="">
+        <b>Name:</b> <span id="outputData1"></span>&nbsp
+		<b>number:</b> <span id="outputData2"></span>&nbsp
+		<b>Entry:</b> <span id="outputData3"></span>
+    </div>
+	<div class="col-lg-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h2>Guests</h2>
+                        <div class="table-responsive">
+                          <table id="datatable" class="table table-striped">
+                              <thead>
+                                  <tr>
+                                      <th>Name</th>
+                                      <th>No. Of People</th>
+                                  </tr>
+                              </thead>
+                              <tbody id="table2">
+      
+                              </tbody>
+                          </table>
+                      </div>
+                    </div>
+                </div>
+            </div>
+</div>
+<script>
+//const qrcode = window.qrcode;
+
+const video = document.createElement("video");
+const canvasElement = document.getElementById("qr-canvas");
+const canvas = canvasElement.getContext("2d");
+
+const qrResult = document.getElementById("qr-result");
+const outputData1 = document.getElementById("outputData1");
+const outputData2 = document.getElementById("outputData2");
+const outputData3 = document.getElementById("outputData3");
+const btnScanQR = document.getElementById("btn-scan-qr");
+
+let scanning = false;
+
+qrcode.callback = (res) => {
+  if (res) {
+  //console.log(res);
+  allData(res)
+    //outputData1.innerText = res;
+    scanning = false;
+
+    video.srcObject.getTracks().forEach(track => {
+      track.stop();
+    });
+
+    qrResult.hidden = false;
+    btnScanQR.hidden = false;
+    canvasElement.hidden = true;
+  }
+};
+
+btnScanQR.onclick = () =>
+	location.reload();
+  navigator.mediaDevices
+    .getUserMedia({ video: { facingMode: "environment" } })
+    .then(function(stream) {
+      scanning = true;
+      qrResult.hidden = true;
+      btnScanQR.hidden = true;
+      canvasElement.hidden = false;
+      video.setAttribute("playsinline", true); // required to tell iOS safari we don't want fullscreen
+      video.srcObject = stream;
+      video.play();
+      tick();
+      scan();
+    });
+
+
+function tick() {
+  canvasElement.height = video.videoHeight;
+  canvasElement.width = video.videoWidth;
+  canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
+
+  scanning && requestAnimationFrame(tick);
+}
+
+function scan() {
+  try {
+    qrcode.decode();
+  } catch (e) {
+    setTimeout(scan, 300);
+  }
+}
+
+function allData(id){
+            
+    console.log(id);
+    table2.innerHTML = ``
+    bookList2 = JSON.parse(localStorage.getItem('listItem3')) ?? []
+	
+	console.log(bookList2)
+    
+    bookList2.forEach(function (value2, i){
+	
+	if(parseInt(id) == value2.id){
+       outputData1.innerText = value2.title;
+	   outputData2.innerText = value2.author;
+	   outputData3.innerText = 'Allowed';
+        var table2 = document.getElementById('table2')
+        // console.log(value2.isComplete);
+        // if(value2.isComplete == 1){
+        table2.innerHTML += `
+            <tr>
+                <td>${value2.title}</td>
+                <td>${value2.author}</td>
+            </tr>`
+			
+        // }
+		}
+	
+		
+    
+    })
+	if(document.getElementById("outputData3").value == ''){
+		outputData3.innerText = 'Not Allowed!';
+	}
+    
+}
+</script>
+</body>
+</html>
